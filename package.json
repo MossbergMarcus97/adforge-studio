@@ -1,0 +1,12 @@
+{
+  "name": "adforge-web-recovered",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "deploy": "npx --yes wrangler pages deploy . --project-name adforge-web",
+    "deploy:adjacent": "npx --yes wrangler pages deploy adjacent-studio --project-name adforge-web --branch adjacent-upgrade"
+  },
+  "devDependencies": {
+    "wrangler": "^4.65.0"
+  }
+}

@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050505" />
+    <title>AdForge | Campaign Systems</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./styles-electric-midnight.css" />
+  </head>
+  <body>
+    <!-- Ambient Background -->
+    <div class="ambient-glow glow-1" aria-hidden="true"></div>
+    <div class="ambient-glow glow-2" aria-hidden="true"></div>
+    
+    <div class="app-shell">
+      <!-- Header -->
+      <header class="shell-header">
+        <div class="brand-mark">
+          <div class="brand-monogram">AF</div>
+          <div>
+            <div class="brand-title">AdForge</div>
+            <div class="brand-subtitle">Campaign Systems</div>
+          </div>
+        </div>
+        
+        <div class="system-status">
+          <span class="status-dot"></span>
+          <span>SYSTEM ONLINE</span>
+        </div>
+        
+        <div class="header-actions">
+          <button class="btn btn-ghost" type="button">Load Demo</button>
+          <button class="btn btn-secondary" type="button">New Project</button>
+          <button class="btn btn-primary" type="button">Start Building</button>
+        </div>
+      </header>
+      
+      <!-- Journey Navigator - Orbital Design -->
+      <section class="journey-orbit" aria-label="Campaign Journey">
+        <div class="orbit-container">
+          <div class="orbit-path"></div>
+          <div class="orbit-progress" style="transform: rotate(-45deg);"></div>
+          
+          <!-- Journey Nodes -->
+          <div class="journey-node" style="left: 0; top: 50%; transform: translateY(-50%);">
+            <div class="node-badge completed">01</div>
+            <div class="node-label">Setup</div>
+          </div>
+          
+          <div class="journey-node" style="left: 25%; top: 0;">
+            <div class="node-badge completed">02</div>
+            <div class="node-label">Identity</div>
+          </div>
+          
+          <div class="journey-node" style="left: 50%; top: 0; transform: translateX(-50%);">
+            <div class="node-badge active">03</div>
+            <div class="node-label active">Narrative</div>
+          </div>
+          
+          <div class="journey-node" style="right: 25%; top: 0;">
+            <div class="node-badge">04</div>
+            <div class="node-label">Creative</div>
+          </div>
+          
+          <div class="journey-node" style="right: 0; top: 50%; transform: translateY(-50%);">
+            <div class="node-badge">05</div>
+            <div class="node-label">Launch</div>
+          </div>
+        </div>
+      </section>
+      
+      <!-- Main Workspace -->
+      <main class="stage-workspace">
+        <div class="workspace-grid">
+          <!-- Client Card -->
+          <article class="card card-glow-cyan">
+            <h3>Client Node</h3>
+            <p style="color: var(--fog-white); margin-bottom: var(--space-4);">Define the root entity for campaign architecture.</p>
+            <div class="input-floating">
+              <input type="text" class="input" id="clientName" placeholder=" " />
+              <label for="clientName">Client Name</label>
+            </div>
+            <div style="display: flex; gap: var(--space-3); margin-top: var(--space-4);">
+              <button class="btn btn-secondary">Create</button>
+              <button class="btn btn-ghost">Archive</button>
+            </div>
+          </article>
+          
+          <!-- Brand Card -->
+          <article class="card card-glow-magenta">
+            <h3>Brand Node</h3>
+            <p style="color: var(--fog-white); margin-bottom: var(--space-4);">Build identity systems with tokenized precision.</p>
+            <div class="input-floating">
+              <input type="text" class="input" id="brandName" placeholder=" " />
+              <label for="brandName">Brand Name</label>
+            </div>
+            <div style="display: flex; gap: var(--space-3); margin-top: var(--space-4);">
+              <button class="btn btn-secondary">Create</button>
+              <button class="btn btn-ghost">Clone</button>
+            </div>
+          </article>
+          
+          <!-- Campaign Card -->
+          <article class="card">
+            <h3>Campaign Node</h3>
+            <p style="color: var(--fog-white); margin-bottom: var(--space-4);">Launch targeted initiatives with full stack integration.</p>
+            <div class="input-floating">
+              <input type="text" class="input" id="campaignName" placeholder=" " />
+              <label for="campaignName">Campaign Name</label>
+            </div>
+            <div style="display: flex; gap: var(--space-3); margin-top: var(--space-4);">
+              <button class="btn btn-primary">Launch</button>
+              <button class="btn btn-ghost">Duplicate</button>
+            </div>
+          </article>
+          
+          <!-- Palette Engine -->
+          <article class="card card-glass" style="grid-column: span 2;">
+            <h3>Palette Engine</h3>
+            <p style="color: var(--fog-white); margin-bottom: var(--space-4);">Define chromatic systems with real-time validation.</p>
+            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: var(--space-3);">
+              <div style="aspect-ratio: 1; background: var(--void-black); border: 1px solid var(--graphite); border-radius: var(--radius-sm);"></div>
+              <div style="aspect-ratio: 1; background: var(--electric-cyan); border-radius: var(--radius-sm); box-shadow: var(--shadow-glow-cyan);"></div>
+              <div style="aspect-ratio: 1; background: var(--neon-magenta); border-radius: var(--radius-sm); box-shadow: var(--shadow-glow-magenta);"></div>
+              <div style="aspect-ratio: 1; background: var(--acid-lime); border-radius: var(--radius-sm);"></div>
+              <div style="aspect-ratio: 1; background: var(--hot-orange); border-radius: var(--radius-sm);"></div>
+              <div style="aspect-ratio: 1; background: var(--charcoal); border: 1px dashed var(--graphite); border-radius: var(--radius-sm); display: grid; place-items: center; color: var(--mist-white);">+</div>
+            </div>
+          </article>
+          
+          <!-- Typography Engine -->
+          <article class="card">
+            <h3>Type System</h3>
+            <p style="color: var(--fog-white); margin-bottom: var(--space-4);">Configure typographic hierarchies.</p>
+            <div style="display: flex; flex-direction: column; gap: var(--space-3);">
+              <select class="select">
+                <option>Space Grotesk — Display</option>
+                <option>Inter — Body</option>
+                <option>JetBrains Mono — Mono</option>
+              </select>
+              <div style="padding: var(--space-4); background: var(--charcoal); border-radius: var(--radius-md);">
+                <p style="font-family: var(--font-display); font-size: var(--text-lg); margin: 0;">Aa</p>
+                <p style="font-size: var(--text-xs); color: var(--fog-white); margin: var(--space-2) 0 0;">Display Text</p>
+              </div>
+            </div>
+          </article>
+          
+          <!-- Live Preview -->
+          <article class="card" style="grid-column: span 2;">
+            <h3>Live Preview</h3>
+            <div class="preview-stage" style="margin-top: var(--space-4);">
+              <div style="position: absolute; inset: 0; background: linear-gradient(135deg, #0a1628, #0f2847, #0a3a35); opacity: 0.9;"></div>
+              <div style="position: relative; z-index: 1; padding: var(--space-5); display: flex; flex-direction: column; justify-content: space-between; height: 100%;">
+                <div style="display: flex; gap: var(--space-2); flex-wrap: wrap;">
+                  <span style="padding: var(--space-1) var(--space-3); background: rgba(0, 240, 255, 0.2); border: 1px solid var(--electric-cyan); border-radius: var(--radius-full); font-size: var(--text-xs); color: var(--electric-cyan);">Bold</span>
+                  <span style="padding: var(--space-1) var(--space-3); background: rgba(0, 240, 255, 0.2); border: 1px solid var(--electric-cyan); border-radius: var(--radius-full); font-size: var(--text-xs); color: var(--electric-cyan);">Human</span>
+                </div>
+                <div>
+                  <h4 style="font-size: var(--text-2xl); margin: 0 0 var(--space-3); text-shadow: 0 0 40px rgba(0, 240, 255, 0.3);">Launch fast with brand clarity.</h4>
+                  <p style="margin: 0; color: rgba(255, 255, 255, 0.8);">Every campaign inherits this system.</p>
+                </div>
+                <button style="align-self: flex-start; padding: var(--space-2) var(--space-4); background: var(--acid-lime); color: var(--void-black); border: none; border-radius: var(--radius-full); font-weight: 700; cursor: pointer;">Get Started →</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </main>
+    </div>
+  </body>
+</html>

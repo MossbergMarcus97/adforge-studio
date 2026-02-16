@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f3efe6" />
+    <title>AdForge Mission Control</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700;900&family=Fraunces:opsz,wght@9..144,500;700;800&family=IBM+Plex+Sans:wght@400;500;600;700&family=Manrope:wght@400;600;700;800&family=Public+Sans:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&family=Space+Grotesk:wght@400;500;700&family=Syne:wght@500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="scene" aria-hidden="true">
+      <span class="scene-glow glow-a"></span>
+      <span class="scene-glow glow-b"></span>
+      <span class="scene-glow glow-c"></span>
+      <span class="scene-grid"></span>
+    </div>
+
+    <header class="shell-header">
+      <div class="shell-title">
+        <p class="eyebrow">AdForge Platform</p>
+        <h1>Campaign System Architect</h1>
+        <p id="workspaceContext" class="workspace-context">No active workspace</p>
+      </div>
+
+      <div class="header-actions">
+        <button id="quickAddClientBtn" class="btn btn-soft" type="button">New Client</button>
+        <button id="quickAddBrandBtn" class="btn btn-soft" type="button">New Brand</button>
+        <button id="quickAddCampaignBtn" class="btn btn-soft" type="button">New Campaign</button>
+        <button id="loadDemoBtn" class="btn btn-primary" type="button">Load Demo Stack</button>
+      </div>
+    </header>
+
+    <main class="shell-layout">
+      <aside class="portfolio-sidebar">
+        <section class="panel panel-tight">
+          <h2>Portfolio Scope</h2>
+          <p class="panel-note">Work across multiple clients, brands, and campaigns from a single control plane.</p>
+
+          <div class="selector-stack">
+            <label class="field">
+              <span>Client</span>
+              <select id="globalClientSelect"></select>
+            </label>
+            <label class="field">
+              <span>Brand</span>
+              <select id="globalBrandSelect"></select>
+            </label>
+            <label class="field">
+              <span>Campaign</span>
+              <select id="globalCampaignSelect"></select>
+            </label>
+          </div>
+        </section>
+
+        <section class="panel panel-tight">
+          <h2>System Pulse</h2>
+          <p id="portfolioSummary" class="panel-note"></p>
+        </section>
+      </aside>
+
+      <section class="studio-shell">
+        <section class="panel journey-panel">
+          <div class="journey-head">
+            <div>
+              <h2>Execution Journey</h2>
+              <p id="journeyHint" class="panel-note">Structure account architecture, then move into identity, narrative, production, and launch ops.</p>
+            </div>
+            <div class="journey-progress">
+              <p id="journeyProgressLabel">Step 1 of 5</p>
+              <div class="progress-track"><span id="journeyProgressFill"></span></div>
+            </div>
+          </div>
+
+          <nav id="journeyNav" class="journey-nav" aria-label="Workflow steps">
+            <button class="journey-step" data-step="setup" type="button">
+              <small>Phase 01</small>
+              <strong>Account Architecture</strong>
+              <p>Client -> Brand -> Campaign structure</p>
+              <span class="step-meta" data-step-status>0%</span>
+            </button>
+            <button class="journey-step" data-step="brand" type="button">
+              <small>Phase 02</small>
+              <strong>Identity Lab</strong>
+              <p>Logos, palettes, fonts, imagery style</p>
+              <span class="step-meta" data-step-status>0%</span>
+            </button>
+            <button class="journey-step" data-step="message" type="button">
+              <small>Phase 03</small>
+              <strong>Narrative Planner</strong>
+              <p>Audience, message, proof architecture</p>
+              <span class="step-meta" data-step-status>0%</span>
+            </button>
+            <button class="journey-step" data-step="creative" type="button">
+              <small>Phase 04</small>
+              <strong>Production Board</strong>
+              <p>Creative volume and status lanes</p>
+              <span class="step-meta" data-step-status>0%</span>
+            </button>
+            <button class="journey-step" data-step="launch" type="button">
+              <small>Phase 05</small>
+              <strong>Delivery Ops</strong>
+              <p>Readiness checklist and exports</p>
+              <span class="step-meta" data-step-status>0%</span>
+            </button>
+          </nav>
+        </section>
+
+        <section class="panel stage-shell">
+          <section class="stage-pane" data-pane="setup">
+            <header class="pane-head">
+              <h2>Account Architecture</h2>
+              <p>Define reusable structure before creative work starts.</p>
+            </header>
+
+            <div class="grid-3">
+              <article class="card">
+                <h3>Client Node</h3>
+                <label class="field">
+                  <span>Client Name</span>
+                  <input id="setupClientNameInput" type="text" maxlength="80" placeholder="Northstar Ventures" />
+                </label>
+                <div class="row-actions">
+                  <button id="addClientBtn" class="btn btn-soft" type="button">Create Client</button>
+                  <button id="deleteClientBtn" class="btn btn-ghost" type="button">Delete</button>
+                </div>
+              </article>
+
+              <article class="card">
+                <h3>Brand Node</h3>
+                <label class="field">
+                  <span>Brand Name</span>
+                  <input id="setupBrandNameInput" type="text" maxlength="80" placeholder="Northstar Cloud" />
+                </label>
+                <div class="row-actions">
+                  <button id="addBrandBtn" class="btn btn-soft" type="button">Create Brand</button>
+                  <button id="cloneBrandBtn" class="btn btn-soft" type="button">Clone</button>
+                  <button id="deleteBrandBtn" class="btn btn-ghost" type="button">Delete</button>
+                </div>
+              </article>
+
+              <article class="card">
+                <h3>Campaign Node</h3>
+                <label class="field">
+                  <span>Campaign Name</span>
+                  <input id="setupCampaignNameInput" type="text" maxlength="90" placeholder="Q3 Enterprise Push" />
+                </label>
+                <div class="row-actions">
+                  <button id="addCampaignBtn" class="btn btn-soft" type="button">Create Campaign</button>
+                  <button id="duplicateCampaignBtn" class="btn btn-soft" type="button">Duplicate</button>
+                  <button id="deleteCampaignBtn" class="btn btn-ghost" type="button">Delete</button>
+                </div>
+              </article>
+            </div>
+          </section>
+
+          <section class="stage-pane" data-pane="brand">
+            <header class="pane-head">
+              <h2>Identity Lab</h2>
+              <p>Build the brand kit once and inherit it across campaigns.</p>
+            </header>
+
+            <div class="grid-2">
+              <article class="card">
+                <h3>Brand Core</h3>
+                <div class="stack-gap">
+                  <label class="field">
+                    <span>Brand Name</span>
+                    <input id="brandNameInput" type="text" maxlength="80" placeholder="AdForge Labs" />
+                  </label>
+                  <label class="field">
+                    <span>Tagline</span>
+                    <input id="taglineInput" type="text" maxlength="120" placeholder="Creative systems for growth teams" />
+                  </label>
+                  <label class="field">
+                    <span>Voice Attributes (comma separated)</span>
+                    <input id="voiceInput" type="text" maxlength="150" placeholder="Decisive, human, proof-led" />
+                  </label>
+                  <label class="field">
+                    <span>Preview Layout</span>
+                    <select id="layoutStyleSelect">
+                      <option value="split">Split Narrative</option>
+                      <option value="poster">Poster Mode</option>
+                      <option value="focus">Product Focus</option>
+                    </select>
+                  </label>
+                </div>
+              </article>
+
+              <article class="card">
+                <h3>Logo System</h3>
+                <label class="upload-zone" for="logoUploadInput" data-drop-target="logos">
+                  <input id="logoUploadInput" type="file" accept="image/*" multiple />
+                  <span class="upload-title">Upload Logo Variants</span>
+                  <small>PNG, SVG, JPG. Set one as primary lockup.</small>
+                </label>
+                <div id="logoGrid" class="asset-grid" aria-live="polite"></div>
+              </article>
+
+              <article class="card">
+                <h3>Palette Engine</h3>
+                <div id="palettePresetList" class="preset-grid" role="list"></div>
+                <div class="row-actions">
+                  <button id="addColorBtn" class="btn btn-soft" type="button">Add Color</button>
+                </div>
+                <div id="paletteEditor" class="palette-editor"></div>
+                <div class="contrast-box">
+                  <h4>Contrast Validation</h4>
+                  <div class="contrast-controls">
+                    <label>
+                      <span>Foreground</span>
+                      <select id="fgColorSelect"></select>
+                    </label>
+                    <label>
+                      <span>Background</span>
+                      <select id="bgColorSelect"></select>
+                    </label>
+                  </div>
+                  <div id="contrastResult" class="contrast-result" aria-live="polite"></div>
+                </div>
+              </article>
+
+              <article class="card">
+                <h3>Typography Engine</h3>
+                <div class="stack-gap">
+                  <label class="field">
+                    <span>Heading Family</span>
+                    <select id="headingFontSelect"></select>
+                  </label>
+                  <label class="field">
+                    <span>Body Family</span>
+                    <select id="bodyFontSelect"></select>
+                  </label>
+                  <label class="field">
+                    <span>Accent Family</span>
+                    <select id="accentFontSelect"></select>
+                  </label>
+                  <label class="field">
+                    <span>Google Font Family</span>
+                    <input id="googleFontInput" type="text" maxlength="90" list="googleFontSuggestions" placeholder="Enter any Google Font family" />
+                  </label>
+                  <datalist id="googleFontSuggestions">
+                    <option value="Inter"></option>
+                    <option value="Roboto"></option>
+                    <option value="Poppins"></option>
+                    <option value="Montserrat"></option>
+                    <option value="Lato"></option>
+                    <option value="Open Sans"></option>
+                    <option value="Playfair Display"></option>
+                    <option value="Merriweather"></option>
+                    <option value="Nunito"></option>
+                    <option value="Oswald"></option>
+                    <option value="Raleway"></option>
+                    <option value="Work Sans"></option>
+                    <option value="Space Mono"></option>
+                    <option value="Bebas Neue"></option>
+                    <option value="Quicksand"></option>
+                    <option value="Source Sans 3"></option>
+                    <option value="Noto Sans"></option>
+                    <option value="Fira Sans"></option>
+                    <option value="Karla"></option>
+                    <option value="Libre Baskerville"></option>
+                  </datalist>
+                  <div class="row-actions">
+                    <button id="addGoogleFontBtn" class="btn btn-soft" type="button">Add Google Font</button>
+                  </div>
+                  <label class="upload-zone upload-zone-compact" for="fontUploadInput">
+                    <input id="fontUploadInput" type="file" accept=".ttf,.otf,.woff,.woff2,font/ttf,font/otf,font/woff,font/woff2" multiple />
+                    <span class="upload-title">Upload Custom Font Files</span>
+                    <small>TTF, OTF, WOFF, WOFF2</small>
+                  </label>
+                  <div id="customFontList" class="font-library" aria-live="polite"></div>
+                </div>
+              </article>
+
+              <article class="card span-2">
+                <h3>Motion and Surfaces</h3>
+                <div class="grid-3 compact-grid">
+                  <label class="field">
+                    <span>Corner Radius <strong id="radiusValue">20px</strong></span>
+                    <input id="radiusInput" type="range" min="8" max="40" step="1" />
+                  </label>
+                  <label class="field">
+                    <span>Gradient Angle <strong id="angleValue">130°</strong></span>
+                    <input id="gradientAngleInput" type="range" min="0" max="360" step="1" />
+                  </label>
+                  <label class="field">
+                    <span>Overlay Density <strong id="overlayValue">45%</strong></span>
+                    <input id="overlayDensityInput" type="range" min="0" max="90" step="1" />
+                  </label>
+                </div>
+
+                <label class="field">
+                  <span>Type Scale <strong id="scaleValue">102%</strong></span>
+                  <input id="typeScaleInput" type="range" min="84" max="136" step="1" />
+                </label>
+
+                <div id="typePreview" class="type-preview">
+                  <p class="type-kicker">Typographic Preview</p>
+                  <h3>Launch fast with brand clarity.</h3>
+                  <p>Every campaign inherits this system with intentional hierarchy.</p>
+                </div>
+              </article>
+
+              <article class="card span-2">
+                <h3>Imagery Direction</h3>
+                <label class="upload-zone" for="imageryUploadInput" data-drop-target="imagery">
+                  <input id="imageryUploadInput" type="file" accept="image/*" multiple />
+                  <span class="upload-title">Upload Campaign Imagery</span>
+                  <small>JPG, PNG, WebP. Set one as hero.</small>
+                </label>
+                <label class="field">
+                  <span>Image Treatment</span>
+                  <select id="imageryFilterSelect">
+                    <option value="none">Clean</option>
+                    <option value="vivid">Vivid</option>
+                    <option value="warm">Warm</option>
+                    <option value="mono">Mono</option>
+                    <option value="grain">Grain</option>
+                  </select>
+                </label>
+                <div id="imageryGrid" class="asset-grid imagery-grid" aria-live="polite"></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="stage-pane" data-pane="message">
+            <header class="pane-head">
+              <h2>Narrative Planner</h2>
+              <p>Turn strategy into campaign-ready messaging architecture.</p>
+            </header>
+
+            <div class="grid-2">
+              <article class="card">
+                <h3>Campaign Inputs</h3>
+                <div class="stack-gap">
+                  <label class="field">
+                    <span>Objective</span>
+                    <input id="campaignObjectiveInput" type="text" maxlength="140" placeholder="Generate qualified pipeline" />
+                  </label>
+                  <label class="field">
+                    <span>Audience</span>
+                    <input id="campaignAudienceInput" type="text" maxlength="140" placeholder="VP Marketing at B2B SaaS" />
+                  </label>
+                  <label class="field">
+                    <span>Channel Mix</span>
+                    <input id="campaignChannelInput" type="text" maxlength="90" placeholder="LinkedIn, Meta, YouTube" />
+                  </label>
+                  <label class="field">
+                    <span>Primary Message</span>
+                    <textarea id="campaignMessageInput" rows="4" maxlength="400" placeholder="Run creative operations and performance campaigns in one system."></textarea>
+                  </label>
+                  <label class="field">
+                    <span>Proof Points (one per line)</span>
+                    <textarea id="campaignProofInput" rows="4" maxlength="420" placeholder="CTR +38%&#10;CAC -24%&#10;Creative velocity +2.1x"></textarea>
+                  </label>
+                  <label class="field">
+                    <span>CTA</span>
+                    <input id="campaignCtaInput" type="text" maxlength="80" placeholder="Book a strategy workshop" />
+                  </label>
+                  <label class="field">
+                    <span>Tone Guardrails</span>
+                    <input id="campaignToneInput" type="text" maxlength="140" placeholder="Specific, calm confidence, no hype claims" />
+                  </label>
+                </div>
+              </article>
+
+              <article class="card">
+                <h3>Message Angle Matrix</h3>
+                <p class="inline-note">Build segment-specific narratives and offers for scale.</p>
+                <div class="row-actions">
+                  <button id="addMessageAngleBtn" class="btn btn-soft" type="button">Add Angle</button>
+                </div>
+                <div id="messageAngleList" class="angle-list" aria-live="polite"></div>
+              </article>
+            </div>
+          </section>
+
+          <section class="stage-pane" data-pane="creative">
+            <header class="pane-head">
+              <h2>Production Board</h2>
+              <p>Manage concept throughput across Draft, Review, Approved, and Live.</p>
+            </header>
+
+            <div class="row-actions">
+              <button id="addCreativeBtn" class="btn btn-primary" type="button">Add Creative</button>
+              <button id="generateCreativePackBtn" class="btn btn-soft" type="button">Generate 3 Concepts</button>
+            </div>
+
+            <div id="creativeBoard" class="creative-board" aria-live="polite"></div>
+          </section>
+
+          <section class="stage-pane" data-pane="launch">
+            <header class="pane-head">
+              <h2>Delivery Ops</h2>
+              <p>Finalize readiness and ship handoff artifacts.</p>
+            </header>
+
+            <div class="grid-2">
+              <article class="card">
+                <h3>Readiness Checklist</h3>
+                <div id="launchChecklist" class="checklist"></div>
+              </article>
+
+              <article class="card">
+                <h3>Campaign Brief Snapshot</h3>
+                <pre id="campaignBriefPreview" class="brief-preview"></pre>
+                <div class="row-actions">
+                  <button id="copyBriefBtn" class="btn btn-soft" type="button">Copy Brief</button>
+                </div>
+              </article>
+
+              <article class="card span-2">
+                <h3>Design Token Export</h3>
+                <div class="row-actions">
+                  <button id="copyCssBtn" class="btn btn-soft" type="button">Copy CSS Variables</button>
+                  <button id="exportCssBtn" class="btn btn-soft" type="button">Download CSS</button>
+                  <button id="exportJsonBtn" class="btn btn-primary" type="button">Export JSON</button>
+                  <button id="importJsonBtn" class="btn btn-ghost" type="button">Import JSON</button>
+                  <input id="importJsonInput" type="file" accept="application/json" hidden />
+                </div>
+                <pre id="cssPreview" class="css-preview"></pre>
+              </article>
+            </div>
+          </section>
+
+          <p id="statusMessage" class="status-message" aria-live="polite"></p>
+        </section>
+      </section>
+
+      <aside class="signal-rail">
+        <section class="panel">
+          <h2>Live Creative Preview</h2>
+          <div id="previewStage" class="preview-stage layout-split filter-none">
+            <div id="previewHeroImage" class="preview-hero"></div>
+            <div class="preview-overlay"></div>
+
+            <div class="preview-content">
+              <div id="previewLogoSlot" class="preview-logo"></div>
+              <div id="voiceChipList" class="voice-chips"></div>
+              <h4 id="previewHeadline">Campaign Name</h4>
+              <p id="previewTagline">Campaign message</p>
+              <button id="previewCtaBtn" class="preview-cta" type="button">Launch</button>
+            </div>
+
+            <article class="preview-ad">
+              <p class="preview-label">Sponsored</p>
+              <h5 id="mockTitle">Creative Title</h5>
+              <p id="mockBody">Creative hook</p>
+              <div class="metric-chips">
+                <span>CTR +38%</span>
+                <span>CAC -24%</span>
+              </div>
+            </article>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Health Metrics</h2>
+          <div id="healthMetrics" class="metric-list"></div>
+        </section>
+      </aside>
+    </main>
+
+    <script src="./app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050505" />
+    <title>AdForge | Campaign Engine</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Space+Grotesk:wght@500;600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="./css/design-system.css" />
+  </head>
+  <body>
+    <!-- Ambient Background -->
+    <div class="ambient-glow glow-1" aria-hidden="true"></div>
+    <div class="ambient-glow glow-2" aria-hidden="true"></div>
+    
+    <div class="app-shell">
+      <!-- Header -->
+      <header class="shell-header">
+        <div class="brand-mark">
+          <div class="brand-monogram">AF</div>
+          <div>
+            <div class="brand-title">AdForge</div>
+            <div class="brand-subtitle">Campaign Engine</div>
+          </div>
+        </div>
+        
+        <div class="system-status">
+          <span class="status-dot"></span>
+          <span>SYSTEM ONLINE</span>
+        </div>
+        
+        <div class="header-actions">
+          <button class="btn btn-ghost" onclick="loadDemoData()">Load Demo</button>
+          <button class="btn btn-secondary">New Project</button>
+          <button class="btn btn-primary" onclick="showToast('Campaign wizard coming in Phase 4!', 'info')">+ New Campaign</button>
+        </div>
+      </header>
+      
+      <!-- Main Content -->
+      <main class="main-content">
+        <!-- Creation-First Navigation -->
+        <div class="nav-tabs">
+          <button class="nav-tab active" data-view="studio" onclick="switchView('studio')">🎨 Studio</button>
+          <button class="nav-tab" data-view="templates" onclick="switchView('templates')">🖼️ Templates</button>
+          <button class="nav-tab" data-view="assets" onclick="switchView('assets')">🎭 Assets</button>
+          <button class="nav-tab" data-view="animate" onclick="switchView('animate')">🎬 Animate</button>
+          <button class="nav-tab" data-view="publish" onclick="switchView('publish')">🚀 Publish</button>
+        </div>
+
+        <!-- View Containers -->
+        <div id="studioContainer" class="view-container"></div>
+        <div id="templatesContainer" class="view-container" style="display: none;"></div>
+        <div id="assetLibraryContainer" class="view-container" style="display: none;"></div>
+        <div id="animateContainer" class="view-container" style="display: none;"></div>
+        <div id="publishContainer" class="view-container" style="display: none;"></div>
+
+        <!-- Legacy views (preserved) -->
+        <div id="dashboardContainer" class="view-container" style="display: none;"></div>
+        <div id="creativeBoardContainer" class="view-container" style="display: none;"></div>
+        <div id="analyticsContainer" class="view-container" style="display: none;"></div>
+        <div id="adGeneratorContainer" class="view-container" style="display: none;"></div>
+      </main>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="./js/store/CampaignStore.js"></script>
+    <script src="./js/components/CampaignCard.js"></script>
+    <script src="./js/components/CampaignDashboard.js"></script>
+    <script src="./js/components/CreativeBoard.js"></script>
+    <script src="./js/components/AnalyticsDashboard.js"></script>
+    <script src="./js/components/AssetLibrary.js"></script>
+    <script src="./js/components/AdGenerator.js"></script>
+    <script src="./js/components/TemplatesGallery.js"></script>
+    <script src="./js/components/Studio.js"></script>
+    <script src="./js/app.js"></script>
+  </body>
+</html>
