@@ -1,4 +1,4 @@
-// Studio — Creation-First Canvas Workspace (Production Ready)
+// Studio — Fixed Drag Positioning & Property Inputs
 class Studio {
   constructor(containerId) {
     this.container = document.getElementById(containerId);
@@ -9,9 +9,10 @@ class Studio {
     this.isDragging = false;
     this.dragTarget = null;
     this.dragType = null;
-    this.dragOffset = { x: 0, y: 0 };
-    this.lastMouseX = 0;
-    this.lastMouseY = 0;
+    this.dragStartX = 0;
+    this.dragStartY = 0;
+    this.dragStartMouseX = 0;
+    this.dragStartMouseY = 0;
     this.activeTool = 'select';
     this.selectedElementId = null;
     this.selectedArtboardId = 'ab1';
@@ -27,14 +28,11 @@ class Studio {
   }
 
   init() {
-    this.renderStructure();
-    this.renderScenes();
-    this.renderCanvas();
-    this.renderProperties();
+    this.render();
     this.attachEventListeners();
   }
 
-  renderStructure() {
+  render() {
     this.container.innerHTML = `
       <div class="studio-layout">
         <div class="scenes-panel">
@@ -42,36 +40,47 @@ class Studio {
             <h3>Scenes</h3>
             <button class="btn-icon" id="addArtboardBtn">+</button>
           </div>
-          <div class="scenes-list" id="scenesList"></div>
+          <div class="scenes-list" id="scenesList">
+            ${this.artboards.map(ab => `
+              <div class="scene-item ${this.selectedArtboardId === ab.id ? 'active' : ''}" data-artboard-id="${ab.id}">
+                <div class="scene-thumbnail" style="aspect-ratio: ${ab.width}/${ab.height}; background: ${ab.background};">
+                  <span style="font-size: 0.6rem; opacity: 0.5;">${ab.width}×${ab.height}</span>
+                </div>
+                <span class="scene-name">${ab.name}</span>
+              </div>
+            `).join('')}
+          </div>
         </div>
         <div class="canvas-area" id="canvasArea">
-          <div class="canvas-viewport" id="canvasViewport">
+          <div class="canvas-viewport" id="canvasViewport" style="transform: translate(${this.panX}px, ${this.panY}px) scale(${this.zoom});">
             <div class="canvas-grid"></div>
-            <div id="artboardsContainer"></div>
+            ${this.artboards.map(ab => this.renderArtboard(ab)).join('')}
           </div>
           <div class="canvas-controls">
             <button class="control-btn" id="zoomOutBtn">−</button>
-            <span class="zoom-level" id="zoomLevel">100%</span>
+            <span class="zoom-level" id="zoomLevel">${Math.round(this.zoom * 100)}%</span>
             <button class="control-btn" id="zoomInBtn">+</button>
             <button class="control-btn" id="resetViewBtn">⌘</button>
           </div>
         </div>
         <div class="properties-panel" id="propertiesPanel">
           <div class="panel-header"><h3>Properties</h3></div>
-          <div id="propertiesContent"></div>
+          <div class="properties-content" id="propertiesContent">
+            ${this.selectedElementId ? this.renderElementProperties() : this.renderArtboardProperties()}
+          </div>
         </div>
       </div>
       <div class="studio-toolbar">
         <div class="tool-group">
-          <button class="tool-btn active" data-tool="select">🖱️</button>
-          <button class="tool-btn" data-tool="text">📝</button>
-          <button class="tool-btn" data-tool="image">🖼️</button>
-          <button class="tool-btn" data-tool="shape">🔷</button>
+          <button class="tool-btn ${this.activeTool === 'select' ? 'active' : ''}" data-tool="select">🖱️</button>
+          <button class="tool-btn ${this.activeTool === 'text' ? 'active' : ''}" data-tool="text">📝</button>
+          <button class="tool-btn ${this.activeTool === 'image' ? 'active' : ''}" data-tool="image">🖼️</button>
+          <button class="tool-btn ${this.activeTool === 'shape' ? 'active' : ''}" data-tool="shape">🔷</button>
         </div>
         <div class="tool-divider"></div>
         <div class="tool-group">
-          <button class="tool-btn">↶</button>
-          <button class="tool-btn">↷</button>
+          <button class="tool-btn" id="undoBtn">↶</button>
+          <button class="tool-btn" id="redoBtn">↷</button>
         </div>
         <div class="tool-divider"></div>
         <div class="tool-group">
@@ -79,26 +88,6 @@ class Studio {
         </div>
       </div>
     `;
-    this.updateViewportTransform();
-  }
-
-  renderScenes() {
-    const container = document.getElementById('scenesList');
-    if (!container) return;
-    container.innerHTML = this.artboards.map(ab => `
-      <div class="scene-item ${this.selectedArtboardId === ab.id ? 'active' : ''}" data-artboard-id="${ab.id}">
-        <div class="scene-thumbnail" style="aspect-ratio: ${ab.width}/${ab.height}; background: ${ab.background};">
-          <span style="font-size: 0.6rem; opacity: 0.5;">${ab.width}×${ab.height}</span>
-        </div>
-        <span class="scene-name">${ab.name}</span>
-      </div>
-    `).join('');
-  }
-
-  renderCanvas() {
-    const container = document.getElementById('artboardsContainer');
-    if (!container) return;
-    container.innerHTML = this.artboards.map(ab => this.renderArtboard(ab)).join('');
   }
 
   renderArtboard(ab) {
@@ -107,7 +96,7 @@ class Studio {
     return `
       <div class="artboard ${isSelected ? 'selected' : ''}" data-artboard-id="${ab.id}"
            style="left: ${ab.x}px; top: ${ab.y}px; width: ${ab.width}px; height: ${ab.height}px; background: ${ab.background};">
-        <div class="artboard-header" data-drag="artboard" data-artboard-id="${ab.id}">
+        <div class="artboard-header" data-draggable="artboard" data-artboard-id="${ab.id}">
           <span class="artboard-name">${ab.name}</span>
           <span class="artboard-dims">${ab.width} × ${ab.height}</span>
         </div>
@@ -120,96 +109,87 @@ class Studio {
 
   renderElement(el) {
     const isSelected = this.selectedElementId === el.id;
-    const baseStyle = `left: ${el.x}px; top: ${el.y}px; width: ${el.width}px; height: ${el.height}px;`;
+    const style = `left: ${el.x}px; top: ${el.y}px; width: ${el.width}px; height: ${el.height}px;`;
     if (el.type === 'text') {
-      return `<div class="canvas-element text-element ${isSelected ? 'selected' : ''}" data-element-id="${el.id}" data-drag="element" style="${baseStyle} color: ${el.color}; font-size: ${el.fontSize}px;">${el.content}</div>`;
+      return `<div class="canvas-element text-element ${isSelected ? 'selected' : ''}" data-element-id="${el.id}" data-draggable="element" style="${style} color: ${el.color}; font-size: ${el.fontSize}px;">${el.content}</div>`;
     } else if (el.type === 'rect') {
-      return `<div class="canvas-element shape-element ${isSelected ? 'selected' : ''}" data-element-id="${el.id}" data-drag="element" style="${baseStyle} background: ${el.fill}; border-radius: ${el.borderRadius}px;"></div>`;
+      return `<div class="canvas-element shape-element ${isSelected ? 'selected' : ''}" data-element-id="${el.id}" data-draggable="element" style="${style} background: ${el.fill}; border-radius: ${el.borderRadius}px;"></div>`;
     }
     return '';
   }
 
-  renderProperties() {
-    const container = document.getElementById('propertiesContent');
-    if (!container) return;
-    container.innerHTML = this.selectedElementId ? this.renderElementProperties() : this.renderArtboardProperties();
-  }
-
   renderArtboardProperties() {
-    const ab = this.getSelectedArtboard();
-    if (!ab) return '<div class="properties-content"><p>No artboard selected</p></div>';
+    const ab = this.artboards.find(a => a.id === this.selectedArtboardId) || this.artboards[0];
     return `
-      <div class="properties-content">
-        <div class="property-section">
-          <h4>Artboard</h4>
-          <div class="property-row">
-            <label>Name</label>
-            <input type="text" class="prop-input" data-prop="artboard" data-key="name" value="${ab.name}">
-          </div>
-          <div class="property-row cols-2">
-            <div><label>Width</label><input type="number" class="prop-input" data-prop="artboard" data-key="width" value="${ab.width}"></div>
-            <div><label>Height</label><input type="number" class="prop-input" data-prop="artboard" data-key="height" value="${ab.height}"></div>
-          </div>
+      <div class="property-section">
+        <h4>Artboard</h4>
+        <div class="property-row">
+          <label>Name</label>
+          <input type="text" class="prop-input" id="prop-ab-name" value="${ab.name}">
         </div>
-        <div class="property-section">
-          <h4>Background</h4>
-          <div class="color-picker-row">
-            <input type="color" data-prop="artboard" data-key="background" value="${ab.background}">
-            <span>${ab.background}</span>
-          </div>
+        <div class="property-row cols-2">
+          <div><label>Width</label><input type="number" class="prop-input" id="prop-ab-width" value="${ab.width}"></div>
+          <div><label>Height</label><input type="number" class="prop-input" id="prop-ab-height" value="${ab.height}"></div>
         </div>
-        <div class="property-section">
-          <h4>Export</h4>
-          <button class="btn-secondary" style="width: 100%;" id="exportPngBtn">Export PNG</button>
-          <button class="btn-secondary" style="width: 100%; margin-top: 8px;" id="exportHtmlBtn">Export HTML</button>
+      </div>
+      <div class="property-section">
+        <h4>Background</h4>
+        <div class="color-picker-row">
+          <input type="color" id="prop-ab-bg" value="${ab.background}">
+          <span id="prop-ab-bg-display">${ab.background}</span>
         </div>
+      </div>
+      <div class="property-section">
+        <h4>Export</h4>
+        <button class="btn-secondary" id="exportPngBtn">Export PNG</button>
+        <button class="btn-secondary" id="exportHtmlBtn" style="margin-top: 8px;">Export HTML</button>
       </div>
     `;
   }
 
   renderElementProperties() {
-    const el = this.getSelectedElement();
-    if (!el) return '<div class="properties-content"><p>No element selected</p></div>';
-    const commonProps = `
+    const el = this.elements.find(e => e.id === this.selectedElementId);
+    if (!el) return this.renderArtboardProperties();
+    
+    let specificProps = '';
+    if (el.type === 'text') {
+      specificProps = `
+        <div class="property-section">
+          <h4>Typography</h4>
+          <div class="property-row"><label>Content</label><textarea class="prop-input" id="prop-el-content" rows="2">${el.content}</textarea></div>
+          <div class="property-row"><label>Font Size</label><input type="number" class="prop-input" id="prop-el-fontSize" value="${el.fontSize}"></div>
+          <div class="property-row"><label>Color</label><input type="color" id="prop-el-color" value="${el.color}"></div>
+        </div>`;
+    } else {
+      specificProps = `
+        <div class="property-section">
+          <h4>Appearance</h4>
+          <div class="property-row"><label>Fill Color</label><input type="color" id="prop-el-fill" value="${el.fill}"></div>
+          <div class="property-row"><label>Border Radius</label><input type="number" class="prop-input" id="prop-el-borderRadius" value="${el.borderRadius}"></div>
+        </div>`;
+    }
+    
+    return `
       <div class="property-section">
         <h4>Position & Size</h4>
         <div class="property-row cols-2">
-          <div><label>X</label><input type="number" class="prop-input" data-prop="element" data-key="x" value="${Math.round(el.x)}"></div>
-          <div><label>Y</label><input type="number" class="prop-input" data-prop="element" data-key="y" value="${Math.round(el.y)}"></div>
+          <div><label>X</label><input type="number" class="prop-input" id="prop-el-x" value="${Math.round(el.x)}"></div>
+          <div><label>Y</label><input type="number" class="prop-input" id="prop-el-y" value="${Math.round(el.y)}"></div>
         </div>
         <div class="property-row cols-2">
-          <div><label>Width</label><input type="number" class="prop-input" data-prop="element" data-key="width" value="${Math.round(el.width)}"></div>
-          <div><label>Height</label><input type="number" class="prop-input" data-prop="element" data-key="height" value="${Math.round(el.height)}"></div>
+          <div><label>Width</label><input type="number" class="prop-input" id="prop-el-width" value="${Math.round(el.width)}"></div>
+          <div><label>Height</label><input type="number" class="prop-input" id="prop-el-height" value="${Math.round(el.height)}"></div>
         </div>
-      </div>`;
-    if (el.type === 'text') {
-      return `
-        <div class="properties-content">
-          ${commonProps}
-          <div class="property-section">
-            <h4>Typography</h4>
-            <div class="property-row"><label>Content</label><textarea class="prop-input" rows="2" data-prop="element" data-key="content">${el.content}</textarea></div>
-            <div class="property-row"><label>Font Size</label><input type="number" class="prop-input" data-prop="element" data-key="fontSize" value="${el.fontSize}"></div>
-            <div class="property-row"><label>Color</label><input type="color" data-prop="element" data-key="color" value="${el.color}"></div>
-          </div>
-          <div class="property-section"><button class="btn-danger" style="width: 100%;" id="deleteElementBtn">Delete Element</button></div>
-        </div>`;
-    } else {
-      return `
-        <div class="properties-content">
-          ${commonProps}
-          <div class="property-section">
-            <h4>Appearance</h4>
-            <div class="property-row"><label>Fill Color</label><input type="color" data-prop="element" data-key="fill" value="${el.fill}"></div>
-            <div class="property-row"><label>Border Radius</label><input type="number" class="prop-input" data-prop="element" data-key="borderRadius" value="${el.borderRadius}"></div>
-          </div>
-          <div class="property-section"><button class="btn-danger" style="width: 100%;" id="deleteElementBtn">Delete Element</button></div>
-        </div>`;
-    }
+      </div>
+      ${specificProps}
+      <div class="property-section">
+        <button class="btn-danger" id="deleteElementBtn">Delete Element</button>
+      </div>
+    `;
   }
 
   attachEventListeners() {
-    // Toolbar
+    // Toolbar tools
     this.container.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
       btn.addEventListener('click', () => {
         this.container.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
@@ -218,235 +198,278 @@ class Studio {
       });
     });
 
-    // Zoom
-    document.getElementById('zoomInBtn')?.addEventListener('click', () => this.zoomIn());
-    document.getElementById('zoomOutBtn')?.addEventListener('click', () => this.zoomOut());
-    document.getElementById('resetViewBtn')?.addEventListener('click', () => this.resetView());
+    // Controls
+    document.getElementById('zoomInBtn')?.addEventListener('click', () => { this.zoom *= 1.2; this.updateTransform(); });
+    document.getElementById('zoomOutBtn')?.addEventListener('click', () => { this.zoom /= 1.2; this.updateTransform(); });
+    document.getElementById('resetViewBtn')?.addEventListener('click', () => { this.zoom = 1; this.panX = 0; this.panY = 0; this.updateTransform(); });
     document.getElementById('previewBtn')?.addEventListener('click', () => this.togglePreview());
     document.getElementById('addArtboardBtn')?.addEventListener('click', () => this.addNewArtboard());
 
     // Canvas interactions
     const canvasArea = document.getElementById('canvasArea');
-    this.container.addEventListener('mousedown', (e) => {
-      const dragEl = e.target.closest('[data-drag]');
-      const elementEl = e.target.closest('[data-element-id]');
-      const sceneEl = e.target.closest('.scene-item[data-artboard-id]');
 
-      if (sceneEl) {
-        e.preventDefault();
-        this.selectArtboard(sceneEl.dataset.artboardId);
+    this.container.addEventListener('mousedown', (e) => {
+      const draggable = e.target.closest('[data-draggable]');
+      const element = e.target.closest('[data-element-id]');
+      const sceneItem = e.target.closest('.scene-item[data-artboard-id]');
+
+      // Scene selection
+      if (sceneItem) {
+        this.selectArtboard(sceneItem.dataset.artboardId);
         return;
       }
 
-      if (dragEl && this.activeTool === 'select') {
+      // Element selection (just click, not drag)
+      if (element && !draggable && this.activeTool === 'select') {
+        e.stopPropagation();
+        this.selectElement(element.dataset.elementId);
+        return;
+      }
+
+      // Start dragging
+      if (draggable && this.activeTool === 'select') {
         e.preventDefault();
         e.stopPropagation();
-        const dragType = dragEl.dataset.drag;
-        if (dragType === 'element') {
-          this.selectElement(dragEl.dataset.elementId);
-          this.startDrag(e, 'element', dragEl.dataset.elementId);
-        } else if (dragType === 'artboard') {
-          const artboardId = dragEl.closest('.artboard').dataset.artboardId;
-          this.selectArtboard(artboardId);
-          this.startDrag(e, 'artboard', artboardId);
+        const type = draggable.dataset.draggable;
+        
+        if (type === 'element') {
+          const elId = draggable.dataset.elementId;
+          this.selectElement(elId);
+          this.startDrag(e, 'element', elId);
+        } else if (type === 'artboard') {
+          const abId = draggable.closest('.artboard').dataset.artboardId;
+          this.selectArtboard(abId);
+          this.startDrag(e, 'artboard', abId);
         }
         return;
       }
 
-      if (elementEl && this.activeTool === 'select') {
-        e.preventDefault();
-        this.selectElement(elementEl.dataset.elementId);
-        return;
-      }
-
+      // Canvas panning
       if (e.target === canvasArea || e.target.classList.contains('canvas-grid')) {
         this.isPanning = true;
-        this.lastMouseX = e.clientX;
-        this.lastMouseY = e.clientY;
+        this.panStartX = e.clientX - this.panX;
+        this.panStartY = e.clientY - this.panY;
         canvasArea.style.cursor = 'grabbing';
-        this.selectNone();
+        this.deselectAll();
       }
     });
 
-    window.addEventListener('mousemove', (e) => {
-      if (this.isDragging && this.dragTarget) {
-        e.preventDefault();
+    // Global mouse move
+    document.addEventListener('mousemove', (e) => {
+      if (this.isDragging) {
         this.handleDrag(e);
       } else if (this.isPanning) {
-        this.panX += e.clientX - this.lastMouseX;
-        this.panY += e.clientY - this.lastMouseY;
-        this.lastMouseX = e.clientX;
-        this.lastMouseY = e.clientY;
-        this.updateViewportTransform();
+        this.panX = e.clientX - this.panStartX;
+        this.panY = e.clientY - this.panStartY;
+        this.updateTransform();
       }
     });
 
-    window.addEventListener('mouseup', () => {
-      if (this.isDragging) this.endDrag();
+    // Global mouse up
+    document.addEventListener('mouseup', () => {
+      if (this.isDragging) {
+        this.endDrag();
+      }
       if (this.isPanning) {
         this.isPanning = false;
         canvasArea.style.cursor = 'default';
       }
     });
 
+    // Wheel zoom
     canvasArea?.addEventListener('wheel', (e) => {
       if (e.ctrlKey || e.metaKey) {
         e.preventDefault();
         const delta = e.deltaY > 0 ? 0.9 : 1.1;
         this.zoom = Math.max(0.1, Math.min(3, this.zoom * delta));
-        this.updateViewportTransform();
+        this.updateTransform();
       }
     }, { passive: false });
 
-    // Properties
-    this.container.addEventListener('change', (e) => {
-      if (e.target.dataset.prop === 'artboard') {
-        this.updateArtboardProperty(e.target.dataset.key, e.target.value);
-      } else if (e.target.dataset.prop === 'element') {
-        this.updateElementProperty(e.target.dataset.key, e.target.value);
-      }
+    // Property inputs - using input event for real-time updates
+    this.setupPropertyListeners();
+  }
+
+  setupPropertyListeners() {
+    // Artboard properties
+    const abName = document.getElementById('prop-ab-name');
+    const abWidth = document.getElementById('prop-ab-width');
+    const abHeight = document.getElementById('prop-ab-height');
+    const abBg = document.getElementById('prop-ab-bg');
+    
+    abName?.addEventListener('input', (e) => this.updateArtboard('name', e.target.value));
+    abWidth?.addEventListener('input', (e) => this.updateArtboard('width', parseInt(e.target.value) || 0));
+    abHeight?.addEventListener('input', (e) => this.updateArtboard('height', parseInt(e.target.value) || 0));
+    abBg?.addEventListener('input', (e) => {
+      this.updateArtboard('background', e.target.value);
+      document.getElementById('prop-ab-bg-display').textContent = e.target.value;
     });
 
-    this.container.addEventListener('click', (e) => {
-      if (e.target.id === 'exportPngBtn') this.exportPNG();
-      else if (e.target.id === 'exportHtmlBtn') this.exportHTML();
-      else if (e.target.id === 'deleteElementBtn') this.deleteSelectedElement();
-    });
+    // Element properties
+    const elX = document.getElementById('prop-el-x');
+    const elY = document.getElementById('prop-el-y');
+    const elW = document.getElementById('prop-el-width');
+    const elH = document.getElementById('prop-el-height');
+    const elContent = document.getElementById('prop-el-content');
+    const elFontSize = document.getElementById('prop-el-fontSize');
+    const elColor = document.getElementById('prop-el-color');
+    const elFill = document.getElementById('prop-el-fill');
+    const elRadius = document.getElementById('prop-el-borderRadius');
+
+    elX?.addEventListener('input', (e) => this.updateElement('x', parseInt(e.target.value) || 0));
+    elY?.addEventListener('input', (e) => this.updateElement('y', parseInt(e.target.value) || 0));
+    elW?.addEventListener('input', (e) => this.updateElement('width', parseInt(e.target.value) || 0));
+    elH?.addEventListener('input', (e) => this.updateElement('height', parseInt(e.target.value) || 0));
+    elContent?.addEventListener('input', (e) => this.updateElement('content', e.target.value));
+    elFontSize?.addEventListener('input', (e) => this.updateElement('fontSize', parseInt(e.target.value) || 0));
+    elColor?.addEventListener('input', (e) => this.updateElement('color', e.target.value));
+    elFill?.addEventListener('input', (e) => this.updateElement('fill', e.target.value));
+    elRadius?.addEventListener('input', (e) => this.updateElement('borderRadius', parseInt(e.target.value) || 0));
+
+    // Buttons
+    document.getElementById('exportPngBtn')?.addEventListener('click', () => this.exportPNG());
+    document.getElementById('exportHtmlBtn')?.addEventListener('click', () => this.exportHTML());
+    document.getElementById('deleteElementBtn')?.addEventListener('click', () => this.deleteSelectedElement());
   }
 
   startDrag(e, type, id) {
     this.isDragging = true;
     this.dragType = type;
-    const canvasArea = document.getElementById('canvasArea');
-    const rect = canvasArea.getBoundingClientRect();
-
+    
+    // Get mouse position relative to viewport
+    const viewport = document.getElementById('canvasViewport');
+    const rect = viewport.getBoundingClientRect();
+    
+    // Store initial positions
+    this.dragStartMouseX = e.clientX;
+    this.dragStartMouseY = e.clientY;
+    
     if (type === 'element') {
       this.dragTarget = this.elements.find(el => el.id === id);
-      const elNode = document.querySelector(`[data-element-id="${id}"]`);
-      const elRect = elNode.getBoundingClientRect();
-      this.dragOffset = {
-        x: (e.clientX - elRect.left) / this.zoom,
-        y: (e.clientY - elRect.top) / this.zoom
-      };
+      this.dragStartX = this.dragTarget.x;
+      this.dragStartY = this.dragTarget.y;
     } else if (type === 'artboard') {
       this.dragTarget = this.artboards.find(ab => ab.id === id);
-      this.dragOffset = { x: 0, y: 0 };
+      this.dragStartX = this.dragTarget.x;
+      this.dragStartY = this.dragTarget.y;
     }
   }
 
   handleDrag(e) {
-    const canvasArea = document.getElementById('canvasArea');
-    const rect = canvasArea.getBoundingClientRect();
-    const rawX = (e.clientX - rect.left - this.panX) / this.zoom - this.dragOffset.x;
-    const rawY = (e.clientY - rect.top - this.panY) / this.zoom - this.dragOffset.y;
-    const snappedX = Math.round(rawX / 10) * 10;
-    const snappedY = Math.round(rawY / 10) * 10;
-
-    this.dragTarget.x = snappedX;
-    this.dragTarget.y = snappedY;
-
+    if (!this.dragTarget) return;
+    
+    // Calculate delta in screen pixels
+    const deltaX = (e.clientX - this.dragStartMouseX) / this.zoom;
+    const deltaY = (e.clientY - this.dragStartMouseY) / this.zoom;
+    
+    // Apply delta to original position
+    let newX = this.dragStartX + deltaX;
+    let newY = this.dragStartY + deltaY;
+    
+    // Snap to grid
+    newX = Math.round(newX / 10) * 10;
+    newY = Math.round(newY / 10) * 10;
+    
+    // Update data
+    this.dragTarget.x = newX;
+    this.dragTarget.y = newY;
+    
+    // Update DOM directly
     if (this.dragType === 'element') {
-      const elNode = document.querySelector(`[data-element-id="${this.dragTarget.id}"]`);
-      if (elNode) {
-        elNode.style.left = snappedX + 'px';
-        elNode.style.top = snappedY + 'px';
+      const el = document.querySelector(`[data-element-id="${this.dragTarget.id}"]`);
+      if (el) {
+        el.style.left = newX + 'px';
+        el.style.top = newY + 'px';
       }
+      // Update properties panel
+      const xInput = document.getElementById('prop-el-x');
+      const yInput = document.getElementById('prop-el-y');
+      if (xInput) xInput.value = newX;
+      if (yInput) yInput.value = newY;
     } else if (this.dragType === 'artboard') {
-      const abNode = document.querySelector(`[data-artboard-id="${this.dragTarget.id}"].artboard`);
-      if (abNode) {
-        abNode.style.left = snappedX + 'px';
-        abNode.style.top = snappedY + 'px';
+      const ab = document.querySelector(`[data-artboard-id="${this.dragTarget.id}"].artboard`);
+      if (ab) {
+        ab.style.left = newX + 'px';
+        ab.style.top = newY + 'px';
       }
     }
-
-    // Update properties panel
-    const xInput = document.querySelector('[data-prop="element"][data-key="x"]');
-    const yInput = document.querySelector('[data-prop="element"][data-key="y"]');
-    if (xInput) xInput.value = snappedX;
-    if (yInput) yInput.value = snappedY;
   }
 
   endDrag() {
     this.isDragging = false;
     this.dragTarget = null;
-    this.dragType = null;
-    this.renderProperties();
   }
 
-  selectElement(elementId) {
-    document.querySelectorAll('.canvas-element.selected').forEach(el => el.classList.remove('selected'));
-    this.selectedElementId = elementId;
+  selectElement(id) {
+    this.selectedElementId = id;
     this.selectedArtboardId = null;
-    const elNode = document.querySelector(`[data-element-id="${elementId}"]`);
-    if (elNode) elNode.classList.add('selected');
-    this.renderScenes();
-    this.renderProperties();
+    this.render();
+    this.setupPropertyListeners();
   }
 
-  selectArtboard(artboardId) {
-    document.querySelectorAll('.artboard.selected').forEach(el => el.classList.remove('selected'));
-    document.querySelectorAll('.scene-item.active').forEach(el => el.classList.remove('active'));
-    this.selectedArtboardId = artboardId;
+  selectArtboard(id) {
+    this.selectedArtboardId = id;
     this.selectedElementId = null;
-    const abNode = document.querySelector(`[data-artboard-id="${artboardId}"].artboard`);
-    if (abNode) abNode.classList.add('selected');
-    const sceneNode = document.querySelector(`.scene-item[data-artboard-id="${artboardId}"]`);
-    if (sceneNode) sceneNode.classList.add('active');
-    this.renderProperties();
+    this.render();
+    this.setupPropertyListeners();
   }
 
-  selectNone() {
+  deselectAll() {
     this.selectedElementId = null;
-    document.querySelectorAll('.canvas-element.selected, .artboard.selected').forEach(el => el.classList.remove('selected'));
-    this.renderProperties();
+    this.render();
+    this.setupPropertyListeners();
   }
 
-  updateArtboardProperty(key, value) {
-    const ab = this.getSelectedArtboard();
+  updateArtboard(key, value) {
+    const ab = this.artboards.find(a => a.id === this.selectedArtboardId);
     if (!ab) return;
-    ab[key] = (key === 'width' || key === 'height') ? (parseInt(value) || 0) : value;
-    this.renderCanvas();
-    this.renderScenes();
-    showToast(`${key} updated`, 'success');
+    ab[key] = value;
+    this.render();
+    this.setupPropertyListeners();
   }
 
-  updateElementProperty(key, value) {
-    const el = this.getSelectedElement();
+  updateElement(key, value) {
+    const el = this.elements.find(e => e.id === this.selectedElementId);
     if (!el) return;
-    el[key] = ['x', 'y', 'width', 'height', 'fontSize', 'borderRadius'].includes(key) ? (parseInt(value) || 0) : value;
-    this.renderCanvas();
-    showToast(`${key} updated`, 'success');
+    el[key] = value;
+    
+    // Update just the element in DOM
+    const elNode = document.querySelector(`[data-element-id="${el.id}"]`);
+    if (elNode) {
+      if (key === 'x') elNode.style.left = value + 'px';
+      if (key === 'y') elNode.style.top = value + 'px';
+      if (key === 'width') elNode.style.width = value + 'px';
+      if (key === 'height') elNode.style.height = value + 'px';
+      if (key === 'content' && el.type === 'text') elNode.textContent = value;
+      if (key === 'fontSize' && el.type === 'text') elNode.style.fontSize = value + 'px';
+      if (key === 'color' && el.type === 'text') elNode.style.color = value;
+      if (key === 'fill' && el.type === 'rect') elNode.style.background = value;
+      if (key === 'borderRadius' && el.type === 'rect') elNode.style.borderRadius = value + 'px';
+    }
   }
 
   deleteSelectedElement() {
     if (!this.selectedElementId) return;
-    this.elements = this.elements.filter(el => el.id !== this.selectedElementId);
+    this.elements = this.elements.filter(e => e.id !== this.selectedElementId);
     this.selectedElementId = null;
-    this.renderCanvas();
-    this.renderProperties();
+    this.render();
+    this.setupPropertyListeners();
     showToast('Element deleted', 'info');
   }
 
   addNewArtboard() {
-    const id = `ab${Date.now()}`;
-    const newAb = {
+    const id = 'ab' + Date.now();
+    this.artboards.push({
       id, name: `Artboard ${this.artboards.length + 1}`,
       width: 300, height: 250,
       x: 100 + this.artboards.length * 50, y: 100 + this.artboards.length * 50,
       background: '#050505'
-    };
-    this.artboards.push(newAb);
+    });
     this.selectArtboard(id);
-    this.renderCanvas();
-    this.renderScenes();
     showToast('New artboard added', 'success');
   }
 
-  zoomIn() { this.zoom = Math.min(3, this.zoom * 1.2); this.updateViewportTransform(); }
-  zoomOut() { this.zoom = Math.max(0.1, this.zoom / 1.2); this.updateViewportTransform(); }
-  resetView() { this.zoom = 1; this.panX = 0; this.panY = 0; this.updateViewportTransform(); }
-
-  updateViewportTransform() {
+  updateTransform() {
     const viewport = document.getElementById('canvasViewport');
     const zoomDisplay = document.getElementById('zoomLevel');
     if (viewport) viewport.style.transform = `translate(${this.panX}px, ${this.panY}px) scale(${this.zoom})`;
@@ -460,8 +483,7 @@ class Studio {
   }
 
   exportPNG() {
-    const ab = this.getSelectedArtboard();
-    if (!ab) { showToast('No artboard selected', 'error'); return; }
+    const ab = this.artboards.find(a => a.id === this.selectedArtboardId) || this.artboards[0];
     const canvas = document.createElement('canvas');
     canvas.width = ab.width; canvas.height = ab.height;
     const ctx = canvas.getContext('2d');
@@ -487,8 +509,7 @@ class Studio {
   }
 
   exportHTML() {
-    const ab = this.getSelectedArtboard();
-    if (!ab) { showToast('No artboard selected', 'error'); return; }
+    const ab = this.artboards.find(a => a.id === this.selectedArtboardId) || this.artboards[0];
     const elementsHTML = this.elements.filter(el => el.artboardId === ab.id).map(el => {
       if (el.type === 'rect') return `    <div style="position: absolute; left: ${el.x}px; top: ${el.y}px; width: ${el.width}px; height: ${el.height}px; background: ${el.fill}; border-radius: ${el.borderRadius}px;"></div>`;
       if (el.type === 'text') return `    <div style="position: absolute; left: ${el.x}px; top: ${el.y}px; font-family: 'Space Grotesk', sans-serif; font-size: ${el.fontSize}px; font-weight: 700; color: ${el.color};">${el.content}</div>`;
@@ -504,9 +525,6 @@ class Studio {
     URL.revokeObjectURL(url);
     showToast('HTML exported!', 'success');
   }
-
-  getSelectedArtboard() { return this.artboards.find(ab => ab.id === this.selectedArtboardId); }
-  getSelectedElement() { return this.elements.find(el => el.id === this.selectedElementId); }
 }
 
 let studio;
